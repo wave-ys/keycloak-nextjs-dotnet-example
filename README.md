@@ -40,3 +40,7 @@ This project shows a basic example about how to use Keycloak as the identity pro
 Now visit [https://localhost:7126/](https://localhost:7126/).
 
 Remember to launch the HTTPS profile because the HTTP profile is likely to not work properly for OIDC.
+
+## License
+
+MIT
