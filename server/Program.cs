@@ -41,7 +41,10 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
 builder.Services.AddControllers();
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -55,5 +58,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+app.MapReverseProxy();
 
 app.Run();
