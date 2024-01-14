@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+  keycloak:
+    image: quay.io/keycloak/keycloak
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: user
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Pa55w0rd
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
