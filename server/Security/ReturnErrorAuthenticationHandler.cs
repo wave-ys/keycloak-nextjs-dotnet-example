@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace KeycloakExampleServer.Security;
 
-public class ReturnStatusCodeAuthenticationHandler(
+public class ReturnErrorAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
     ILoggerFactory logger,
     UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
@@ -13,7 +13,7 @@ public class ReturnStatusCodeAuthenticationHandler(
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         throw new NotImplementedException(
-            "This handler is only used to return status code for challenge and forbid, not to authenticate");
+            "This handler is only used to handle challenge and forbid, not to authenticate");
     }
 
     protected override Task HandleForbiddenAsync(AuthenticationProperties properties)

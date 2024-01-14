@@ -15,7 +15,7 @@ public static class UserExtensions
             ExternalId = user.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value,
             Name = user.Claims.First(claim => claim.Type == JwtRegisteredClaimNames.Name).Value,
             EmailVerified = user.Claims.First(claim => claim.Type == "email_verified").Value == "true",
-            EmailAddress = user.Claims.First(claim => claim.Type == ClaimTypes.Email).Value,
+            EmailAddress = user.Claims.First(claim => claim.Type == ClaimTypes.Email).Value
         };
     }
 }

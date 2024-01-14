@@ -1,6 +1,6 @@
 namespace KeycloakExampleServer.Security;
 
-public class ReturnStatusCodeAuthenticationDefaults
+public class ReturnErrorAuthenticationDefaults
 {
     public const string AuthenticationScheme = "ReturnStatusCode";
 }

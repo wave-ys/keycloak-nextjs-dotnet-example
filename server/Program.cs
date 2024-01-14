@@ -1,26 +1,41 @@
 using KeycloakExampleServer.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
-    .AddAuthentication(options => { options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme; })
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = ReturnErrorAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultForbidScheme = ReturnErrorAuthenticationDefaults.AuthenticationScheme;
+    })
     .AddCookie()
-    .AddScheme<AuthenticationSchemeOptions, ReturnStatusCodeAuthenticationHandler>(
-        ReturnStatusCodeAuthenticationDefaults.AuthenticationScheme, _ => { })
+    .AddScheme<AuthenticationSchemeOptions, ReturnErrorAuthenticationHandler>(
+        ReturnErrorAuthenticationDefaults.AuthenticationScheme, _ => { })
     .AddOpenIdConnect(options =>
     {
-        options.ClientId = builder.Configuration.GetValue<string>("Keycloak:ClientId");
-        options.ClientSecret = builder.Configuration.GetValue<string>("Keycloak:ClientSecret");
-        options.MetadataAddress = builder.Configuration.GetValue<string>("Keycloak:MetadataAddress");
-        options.CallbackPath = "/Api/Auth/Callback";
+        options.ClientId = builder.Configuration.GetValue<string>("Keycloak:ClientId") ??
+                           "Keycloak Client Id not found";
+        options.ClientSecret = builder.Configuration.GetValue<string>("Keycloak:ClientSecret") ??
+                               "Keycloak Client Secret not found";
+        options.MetadataAddress = builder.Configuration.GetValue<string>("Keycloak:MetadataAddress") ??
+                                  "Keycloak Metadata Address not found";
+
         options.ResponseType = "code";
+
+        // Keycloak will redirect to these pages after signing in or signing out.
+        // Don't forget to configure them in Keycloak dashboard.
+        options.CallbackPath = "/Api/Auth/Sign-In-Callback";
+        options.SignedOutCallbackPath = "/Api/Auth/Sign-Out-Callback";
+
+        // In addition to the access and refresh tokens, this will also save the ID token,
+        // which will be automatically attached to the callback URL during sign-out.
+        options.SaveTokens = true;
+
         if (builder.Environment.IsDevelopment())
             options.RequireHttpsMetadata = false;
     });
@@ -32,7 +47,6 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
