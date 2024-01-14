@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using KeycloakExampleServer.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -8,13 +9,10 @@ namespace KeycloakExampleServer.Controllers;
 
 [ApiController]
 [Route("/Api/[controller]")]
-public class AuthController(IConfiguration configuration) : ControllerBase
+public class AuthController : ControllerBase
 {
-    private readonly string _keycloakClientId =
-        configuration.GetValue<string>("Keycloak:ClientId") ?? "Keycloak Client Id not found";
-
     [HttpGet("Login")]
-    public async Task Login([FromQuery] string? redirect = "/")
+    public async Task Login([FromQuery] string redirect = "/")
     {
         var properties = new AuthenticationProperties
         {
@@ -24,16 +22,20 @@ public class AuthController(IConfiguration configuration) : ControllerBase
     }
 
     [HttpGet("Logout")]
-    [Authorize]
-    public async Task Logout([FromQuery] string? redirect = "/")
+    public async Task Logout([FromQuery] string redirect = "/")
     {
         var properties = new AuthenticationProperties
         {
-            RedirectUri = redirect
+            RedirectUri = "/Api/Auth/Logout-Callback?redirect=" + UrlEncoder.Default.Encode(redirect)
         };
-        properties.SetParameter("client_id", _keycloakClientId);
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignOutAsync("OpenIdConnect", properties);
+    }
+
+    [HttpGet("Logout-Callback")]
+    public async Task<IActionResult> LogoutCallback([FromQuery] string redirect = "/")
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Redirect(redirect);
     }
 
     [HttpGet("Profile")]
