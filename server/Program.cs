@@ -1,11 +1,36 @@
+using KeycloakExampleServer.Security;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services
+    .AddAuthentication(options => { options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme; })
+    .AddCookie()
+    .AddScheme<AuthenticationSchemeOptions, ReturnStatusCodeAuthenticationHandler>(
+        ReturnStatusCodeAuthenticationDefaults.AuthenticationScheme, _ => { })
+    .AddOpenIdConnect(options =>
+    {
+        options.ClientId = builder.Configuration.GetValue<string>("Keycloak:ClientId");
+        options.ClientSecret = builder.Configuration.GetValue<string>("Keycloak:ClientSecret");
+        options.MetadataAddress = builder.Configuration.GetValue<string>("Keycloak:MetadataAddress");
+        options.CallbackPath = "/Api/Auth/Callback";
+        options.ResponseType = "code";
+        if (builder.Environment.IsDevelopment())
+            options.RequireHttpsMetadata = false;
+    });
 
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -15,30 +40,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
+app.MapControllers();
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
