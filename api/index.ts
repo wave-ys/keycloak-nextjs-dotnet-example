@@ -1,0 +1,1 @@
+export const PATH_PREFIX = process.env.PATH_PREFIX
